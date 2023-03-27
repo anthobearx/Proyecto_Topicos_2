@@ -24,11 +24,10 @@ class MiPanelP extends JPanel{
     /*Atributos para crear formas (Shape)*/
     Point p1;
     Point p2;
-    /*Atributos */
+    /*Atributos JMenu para JMenuBar*/
     JMenu menuArchivo;
     JMenu menuDibujar;
     JMenu menuAyuda;
-    JButton menuRegresar;
     JMenuItem menuItemAcercaDe;
 
     //componentes de dibujo. Se crean en la clase para que se puedan usar en los oyentes
@@ -36,6 +35,7 @@ class MiPanelP extends JPanel{
     JRadioButtonMenuItem menuItemRectangulo;
     JRadioButtonMenuItem menuItemCirculo;
     JCheckBoxMenuItem menuItemRelleno;
+    JMenuItem menuItemColor;
     ButtonGroup grupoFiguras;
     //grupoFigura es utilizado para agrupar el tipo de figura (linea, rectangulo o elipse), y que se seleccione
     //solo uno a la vez
@@ -93,6 +93,7 @@ class MiPanelP extends JPanel{
         menuItemRectangulo = new JRadioButtonMenuItem("Rectangulo");
         menuItemCirculo = new JRadioButtonMenuItem("Elipse");
         menuItemRelleno = new JCheckBoxMenuItem("Relleno", false);
+        menuItemColor = new JMenuItem("Color...");
 
 
 
@@ -102,6 +103,7 @@ class MiPanelP extends JPanel{
         menuItemRectangulo.addActionListener(manejadorDibujo);
         menuItemRelleno.addActionListener(manejadorDibujo);
         menuItemRelleno.setEnabled(false);
+        menuItemColor.addActionListener(manejadorDibujo);
 
 
 
@@ -116,6 +118,7 @@ class MiPanelP extends JPanel{
         menuDibujar.add(menuItemCirculo);
         menuDibujar.addSeparator();
         menuDibujar.add(menuItemRelleno);
+        menuDibujar.add(menuItemColor);
         // Menu Ayuda
         menuAyuda = new JMenu("Ayuda");
 
@@ -288,7 +291,7 @@ class MiPanelP extends JPanel{
             } else if (click == menuItemCirculo) {
                 tipo = Figura.Tipos.CIRCULO;
                 menuItemRelleno.setEnabled(true);
-            } else {
+            } else if (click == menuItemRelleno) {
                 if (menuItemRelleno.isSelected()) {
                     relleno = true;
                     menuItemLinea.setEnabled(false);
@@ -296,6 +299,24 @@ class MiPanelP extends JPanel{
                     relleno = false;
                     menuItemLinea.setEnabled(true);
                 }
+            } else if (click == menuItemColor){
+                JDialog dialogColores = new JDialog();
+                JColorChooser ventanaColor = new JColorChooser();
+                dialogColores.add(ventanaColor, BorderLayout.CENTER);
+                JButton btnAceptarColor = new JButton("Aceptar");
+                dialogColores.add(btnAceptarColor,BorderLayout.SOUTH);
+                dialogColores.pack();
+                dialogColores.setLocationRelativeTo(null);
+                dialogColores.setVisible(true);
+                //Al pulsar el boton se hace esto
+                btnAceptarColor.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        color=ventanaColor.getColor();
+                        dialogColores.dispose();
+                    }
+                });
+
             }
 
         }

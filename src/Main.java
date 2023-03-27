@@ -1,4 +1,4 @@
-/**
+/*
         Elaborar un programa en Java que resuelva el siguiente problema: Se desea una aplicacion en
         ambiente Windows que permita dibujar figuras utilizando los movimientos de arrastre del raton de la
         computadora.
@@ -50,21 +50,11 @@ public class Main {
         miVentanaP.addKeyListener(new KeyListener() {
             @Override
             public void keyPressed(KeyEvent e) {
-                //System.out.println("Se presiono " + e.getKeyCode());
-                /*Tuve que copiar y adaptar el metodo de regresarMetodo, por problemas de no poder usuar el metodo
-                * desde otra clase sin hacerlo statico, ya que repaint, no puede ser usado en metodos estaticos*/
+                /*Ni idea, pero ya funciona*/
                 if (e.getKeyCode() == KeyEvent.VK_Z && e.isControlDown()) {
-                    if(MiPanelP.figuras.size()>0){
-                        MiPanelP.figuras.remove(MiPanelP.figuras.size() - 1);
-                        miPanelp.repaint();
-                    }else{
-                        JOptionPane.showMessageDialog(miPanelp,
-                                "No se ha podido borrar ninguna figura, debido a que no hay ninguna :o!",
-                                "Error", JOptionPane.ERROR_MESSAGE);
-                    }
+                    miPanelp.regresarMetodo();
                 }
             }
-
             @Override
             public void keyReleased(KeyEvent e) {
             }
