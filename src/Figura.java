@@ -1,8 +1,10 @@
 import java.awt.*;
+import java.io.Serializable;
 
 /**Clase utilizada para la creacion de Figuras como:
  * Línea, Rectángulo y Círculo */
-public class Figura {
+/*El implements serializable es para poder guardar las figuras en un .obj*/
+public class Figura implements Serializable {
     enum Tipos{
         LINEA,
         RECTANGULO,

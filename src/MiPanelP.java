@@ -1,11 +1,18 @@
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Vector;
 
 
 class MiPanelP extends JPanel{
@@ -29,7 +36,12 @@ class MiPanelP extends JPanel{
     JMenu menuDibujar;
     JMenu menuAyuda;
     JMenuItem menuItemAcercaDe;
-
+    //componentes de archivo
+    JMenuItem menuItemNuevo;
+    JMenuItem menuItemAbrir;
+    JMenuItem menuItemGuardar;
+    JMenuItem menuItemImprimir;
+    JMenuItem menuItemSalir;
     //componentes de dibujo. Se crean en la clase para que se puedan usar en los oyentes
     JRadioButtonMenuItem menuItemLinea;
     JRadioButtonMenuItem menuItemRectangulo;
@@ -46,12 +58,10 @@ class MiPanelP extends JPanel{
     JLabel imagenLabel;
     // Constructor para inicializar valores
     public MiPanelP() {
-
+        /*Oyentes de la clase*/
         MiOyente miOyente = new MiOyente();
         addMouseListener(miOyente);
         addMouseMotionListener(miOyente);
-        // Registra este objeto como un escucha de eventos de teclado en el panel
-
 
         // Valores iniciales
         figuras = new ArrayList<>();
@@ -79,11 +89,27 @@ class MiPanelP extends JPanel{
 
         // Menu Archivo
         menuArchivo = new JMenu("Archivo");
-        JMenuItem menuItemGuardar = new JMenuItem("Guardar");
-        JMenuItem menuItemSalir = new JMenuItem("Salir");
+        //Crearlos y darle texto
+        menuItemNuevo = new JMenuItem("Nuevo");
+        menuItemAbrir = new JMenuItem("Abrir");
+        menuItemGuardar = new JMenuItem("Guardar como...");
+        menuItemImprimir = new JMenuItem("Imprimir");
+        menuItemSalir = new JMenuItem("Salir");
+        //Agregarlos
+        menuArchivo.add(menuItemNuevo);
+        menuArchivo.add(menuItemAbrir);
         menuArchivo.add(menuItemGuardar);
+        menuArchivo.add(menuItemImprimir);
         menuArchivo.addSeparator();
         menuArchivo.add(menuItemSalir);
+
+        //Oyentes Archivo
+        ManejadorArchivo manejadorArchivo = new ManejadorArchivo();
+        menuItemNuevo.addActionListener(manejadorArchivo);
+        menuItemAbrir.addActionListener(manejadorArchivo);
+        menuItemGuardar.addActionListener(manejadorArchivo);
+        menuItemImprimir.addActionListener(manejadorArchivo);
+        menuItemSalir.addActionListener(manejadorArchivo);
 
         // Menu Dibujar
         menuDibujar = new JMenu("Dibujar");
@@ -321,9 +347,114 @@ class MiPanelP extends JPanel{
 
         }
     }
+    private class ManejadorArchivo implements ActionListener{
 
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JMenuItem click = (JMenuItem) e.getSource();
+            if(click==menuItemNuevo){
+                //figuras = new ArrayList<>(); //por terminos de eficiencia, se utiliza removeAll
+                figuras.removeAll(figuras);
+                repaint();
+
+            }else if(click==menuItemAbrir){
+                abrirDibujo();
+            }else if(click==menuItemGuardar){
+                guardarDibujo();
+            }else if(click==menuItemImprimir){
+                print();
+            }else if (click==menuItemSalir){
+                System.exit(0);
+            }
+        }
+    }
+    public void print(){
+        PrinterJob pj = PrinterJob.getPrinterJob();
+        pj.setJobName(" Programa de Dibujo ");
+
+        pj.setPrintable (new Printable() {
+            public int print(Graphics pg, PageFormat pf, int pageNum){
+                if (pageNum > 0){
+                    return Printable.NO_SUCH_PAGE;
+                }
+
+                Graphics2D g2 = (Graphics2D) pg;
+                g2.translate(pf.getImageableX(), pf.getImageableY());
+                double factorEscalaX = 100.0;
+                double factorEscalaY = 100.0;
+                //g2.scale(factorEscalaX/pf.getImageableWidth(), factorEscalaY/pf.getImageableHeight());
+                paint(g2);
+                return Printable.PAGE_EXISTS;
+            }
+        });
+        if (pj.printDialog() == false)
+            return;
+
+        try {
+            pj.print();
+        } catch (PrinterException ex) {
+            // handle exception
+        }
+    }
+    private boolean abrirDibujo() {
+        boolean regresar = false;
+        File directorioActual = new File(".");
+        try {
+            JFileChooser archivo = new JFileChooser(directorioActual.getCanonicalPath());
+            FileNameExtensionFilter filtro = new FileNameExtensionFilter("Mi Dibujo", new String[] { "dbj" });
+            archivo.setFileFilter(filtro);
+            if (archivo.showOpenDialog(Main.miVentanaP) == 0) {
+                File archivoAbrir = new File(NombreDelArchivo(archivo.getSelectedFile().getName(), ".dbj"));
+                FileInputStream fis = new FileInputStream(archivoAbrir);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                figuras = (ArrayList<Figura>) ois.readObject();
+                fis.close();
+                ois.close();
+                //dibujoGuardado = false;
+                menuItemNuevo.setEnabled(true);
+                regresar = true;
+                repaint();
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(Main.miVentanaP, "Error al intentar abrir el ARCHIVO", "Programa de Dibujo",
+                    2);
+        }
+        return regresar;
+    }
+    private String NombreDelArchivo(String nombre, String extension) {
+        String s = "";
+        if (nombre.lastIndexOf(extension) == nombre.length() - 4)
+            s = nombre;
+        else
+            s = new StringBuilder(String.valueOf(nombre)).append(extension).toString();
+        ;
+        return s;
+    }
+    private boolean guardarDibujo() {
+        boolean regresar = false;
+        File directorioActual = new File(".");
+        try {
+            JFileChooser archivo = new JFileChooser(directorioActual.getCanonicalPath());
+            FileNameExtensionFilter filtro = new FileNameExtensionFilter("Mi Dibujo", new String[] { "dbj" });
+            archivo.setFileFilter(filtro);
+            if (archivo.showSaveDialog(Main.miVentanaP) == 0) {
+                File archivoGuardar = new File(NombreDelArchivo(archivo.getSelectedFile().getName(), ".dbj"));
+                FileOutputStream fos = new FileOutputStream(archivoGuardar);
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                oos.writeObject(figuras);
+                fos.close();
+                oos.close();
+                JOptionPane.showMessageDialog(Main.miVentanaP, "Archivo guardado correctamente", "Programa de Dibujo",
+                        -1);
+                //dibujoGuardado = true;
+                regresar = true;
+            }
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(Main.miVentanaP, "Error al guardar el ARCHIVO", "Programa de Dibujo", 2);
+        }
+        return regresar;
+    }
     private class ManejadorAyuda implements ActionListener {
-
 
         @Override
         public void actionPerformed(ActionEvent e) {

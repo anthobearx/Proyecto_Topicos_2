@@ -35,9 +35,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class Main {
+    static JFrame miVentanaP;//Hacemos la ventana estatica para usarla en toda la clase
     public static void main(String[] args) {
         /*Creacion de ventana mediante JFrame*/
-        JFrame miVentanaP = new JFrame("Proyecto topicos 2- Vega Gonzalez Jesus Antonio");
+        miVentanaP = new JFrame("Proyecto topicos 2- Vega Gonzalez Jesus Antonio");
         miVentanaP.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         MiPanelP miPanelp = new MiPanelP();
