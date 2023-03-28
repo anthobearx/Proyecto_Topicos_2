@@ -12,9 +12,9 @@ public class Figura implements Serializable {
     }
     //atributos de la clase
     private Shape figura;
-    private final Color color;
+    private Color color=Color.black;
     private boolean relleno;
-    private static Tipos tipo;
+    private Tipos tipo;
 
     /**Constructor: se necesita de un constructor, para poder almacenar
     los atributos de cada figura, para poder volver a dibujarla, cuando
@@ -26,7 +26,7 @@ public class Figura implements Serializable {
     }
     /**Metodo para dibujar figura con sus respectivos atributos
     (Por el momento no lo utilizo, pero lo escribi por si en un futuro lo necesito)*/
-    private void DibujarFigura(Graphics2D g2D){
+    public void dibujarFigura(Graphics2D g2D){
         g2D.setColor(color);
         if (relleno){
             g2D.fill(figura);

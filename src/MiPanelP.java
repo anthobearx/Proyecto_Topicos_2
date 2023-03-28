@@ -380,10 +380,16 @@ class MiPanelP extends JPanel{
 
                 Graphics2D g2 = (Graphics2D) pg;
                 g2.translate(pf.getImageableX(), pf.getImageableY());
+                //Estas linea provocan que la imagen se vea chiquita
+                /**
                 double factorEscalaX = 100.0;
                 double factorEscalaY = 100.0;
-                //g2.scale(factorEscalaX/pf.getImageableWidth(), factorEscalaY/pf.getImageableHeight());
-                paint(g2);
+
+                //g2.scale(factorEscalaX/pf.getImageableWidth(), factorEscalaY/pf.getImageableHeight());*/
+                /*Debido a que el metodo print() anterior imprimia el panel y el JMenuBar, se ideo el metodo printFiguras
+                * pera imprimir unicamente las figuras dibujadas*/
+                //paint(g2);
+                printFiguras(g2);
                 return Printable.PAGE_EXISTS;
             }
         });
@@ -396,6 +402,12 @@ class MiPanelP extends JPanel{
             // handle exception
         }
     }
+    public void printFiguras(Graphics2D g2) {
+        for (Figura figura : figuras) {
+            figura.dibujarFigura(g2);
+        }
+    }
+
     private boolean abrirDibujo() {
         boolean regresar = false;
         File directorioActual = new File(".");

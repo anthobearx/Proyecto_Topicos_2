@@ -44,6 +44,7 @@ public class Main {
         MiPanelP miPanelp = new MiPanelP();
         miVentanaP.add( miPanelp);
 
+        miVentanaP.setResizable(false);//evita que la ventana sea redimensionable
         miVentanaP.setSize(600,400);
         miVentanaP.setVisible(true);
 
