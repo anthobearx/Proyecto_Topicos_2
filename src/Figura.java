@@ -25,7 +25,7 @@ public class Figura implements Serializable {
         this.relleno=relleno;
     }
     /**Metodo para dibujar figura con sus respectivos atributos
-    (Por el momento no lo utilizo, pero lo escribi por si en un futuro lo necesito)*/
+    (Lo llamo para poder imprimir las figuras)*/
     public void dibujarFigura(Graphics2D g2D){
         g2D.setColor(color);
         if (relleno){
@@ -50,8 +50,5 @@ public class Figura implements Serializable {
     public boolean isRelleno() {
         return relleno;
     }
-    /**Metodo el cual al ser invocado, va a preguntar que tipo de
-    figura se va a crear, y ya con x,y de presionar el mouse se creara
-    la figura*/
 
 }

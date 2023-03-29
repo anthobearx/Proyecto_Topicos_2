@@ -30,40 +30,10 @@
         Nota: No se aceptan trabajos identicos ni con codigo descargado de paginas Web.
 
  */
-import javax.swing.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 
 public class Main {
-    static JFrame miVentanaP;//Hacemos la ventana estatica para usarla en toda la clase
+    /*Tengo un Main mucho mas limpio, el cual solo se encarga de usar la clase contenedor*/
     public static void main(String[] args) {
-        /*Creacion de ventana mediante JFrame*/
-        miVentanaP = new JFrame("Proyecto topicos 2- Vega Gonzalez Jesus Antonio");
-        miVentanaP.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        MiPanelP miPanelp = new MiPanelP();
-        miVentanaP.add( miPanelp);
-
-        miVentanaP.setResizable(false);//evita que la ventana sea redimensionable
-        miVentanaP.setSize(600,400);
-        miVentanaP.setVisible(true);
-
-
-        miVentanaP.addKeyListener(new KeyListener() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                /*Ni idea, pero ya funciona*/
-                if (e.getKeyCode() == KeyEvent.VK_Z && e.isControlDown()) {
-                    miPanelp.regresarMetodo();
-                }
-            }
-            @Override
-            public void keyReleased(KeyEvent e) {
-            }
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-            }
-        });
+       new Contenedor();//se llama a la clase contendor, para que llame a la ventana principal
     }
 }

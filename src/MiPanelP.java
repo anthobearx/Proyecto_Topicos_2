@@ -12,7 +12,7 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Vector;
+
 
 
 class MiPanelP extends JPanel{
@@ -27,7 +27,8 @@ class MiPanelP extends JPanel{
     private Color color = new Color(0, 0, 255);
     private Figura.Tipos tipo = Figura.Tipos.LINEA;
     private boolean relleno = false;
-    private boolean guardado = false;
+    /*Variable para determinar si el archivo se guardo con los ultimos cambios o no*/
+    boolean dibujoGuardado=false;
     /*Atributos para crear formas (Shape)*/
     Point p1;
     Point p2;
@@ -48,14 +49,21 @@ class MiPanelP extends JPanel{
     JRadioButtonMenuItem menuItemCirculo;
     JCheckBoxMenuItem menuItemRelleno;
     JMenuItem menuItemColor;
-    ButtonGroup grupoFiguras;
     //grupoFigura es utilizado para agrupar el tipo de figura (linea, rectangulo o elipse), y que se seleccione
     //solo uno a la vez
+    ButtonGroup grupoFiguras;
+
     Figura figuraCompleta;//en esta figura se creara la figura con shape, color y relleno
 
     /*Regresar*/
     ImageIcon regresarImagen = new ImageIcon("src\\imagenes\\flecha.png");
     JLabel imagenLabel;
+
+    /*Ruta seleccionada*/
+    String rutaSeleccionada=".";
+    JFileChooser archivoVentana;
+
+
     // Constructor para inicializar valores
     public MiPanelP() {
         /*Oyentes de la clase*/
@@ -212,12 +220,18 @@ class MiPanelP extends JPanel{
     public void regresarMetodo(){
         if(figuras.size()>0){
             figuras.remove(figuras.size() - 1);
-            repaint();
+            repaintMetodo();
         }else{
             JOptionPane.showMessageDialog(MiPanelP.this,
                     "No se ha podido borrar ninguna figura, debido a que no hay ninguna :o!",
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    /**Este metodo fue creado con finalidad de que al utilizar un repaint, se avise al programa que los cambios guardados
+     * son falsos, es decir que no se han guardado los cambios*/
+    public void repaintMetodo(){
+        repaint();
+        dibujoGuardado=false;
     }
 
 
@@ -270,7 +284,7 @@ class MiPanelP extends JPanel{
             figuraCompleta = new Figura(forma, color, relleno);//aquí se crea la figura con sus 3 atributos (shape, color y relleno)
             figuras.add(figuraCompleta);//aqui se agrega a la lista de vectores la figura completa
             forma = null;//limpiar el atributo, para poder crear otra figura
-            repaint();//se vuelve a pintar to-do
+            repaintMetodo();//se vuelve a pintar to-do
         }
 
         public void mouseDragged(MouseEvent e) {
@@ -355,7 +369,7 @@ class MiPanelP extends JPanel{
             if(click==menuItemNuevo){
                 //figuras = new ArrayList<>(); //por terminos de eficiencia, se utiliza removeAll
                 figuras.removeAll(figuras);
-                repaint();
+                repaintMetodo();
 
             }else if(click==menuItemAbrir){
                 abrirDibujo();
@@ -410,60 +424,96 @@ class MiPanelP extends JPanel{
 
     private boolean abrirDibujo() {
         boolean regresar = false;
-        File directorioActual = new File(".");
+        File directorioActual = new File(rutaSeleccionada);//directorio donde abrira la ventana
         try {
-            JFileChooser archivo = new JFileChooser(directorioActual.getCanonicalPath());
-            FileNameExtensionFilter filtro = new FileNameExtensionFilter("Mi Dibujo", new String[] { "dbj" });
-            archivo.setFileFilter(filtro);
-            if (archivo.showOpenDialog(Main.miVentanaP) == 0) {
-                File archivoAbrir = new File(NombreDelArchivo(archivo.getSelectedFile().getName(), ".dbj"));
-                FileInputStream fis = new FileInputStream(archivoAbrir);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                figuras = (ArrayList<Figura>) ois.readObject();
+            //aqui entrara por defecto en la carpeta del proyecto por rutaSeleccionada="."
+            if (rutaSeleccionada=="."){
+                archivoVentana = new JFileChooser(directorioActual.getCanonicalPath());
+            } else {
+                //se crea filechooser, en este camino se pondra la ruta en la que se quedo la rutaseleccionada
+                archivoVentana = new JFileChooser(directorioActual);
+            }
+
+
+
+
+            //se crea un filtro para solo utilizar la extension de ahi
+            FileNameExtensionFilter filtro = new FileNameExtensionFilter("Archivo dibujo - Vega Gonzalez", "dbjx");
+            archivoVentana.setFileFilter(filtro);
+            if (archivoVentana.showOpenDialog(Contenedor.miVentanaP) == 0) {
+                // Obtener la ruta seleccionada
+                rutaSeleccionada = archivoVentana.getSelectedFile().getAbsolutePath();
+                // Archivo con la ruta seleccionada y el nombre del archivo
+                File archivoAbrir = new File(rutaSeleccionada);
+                FileInputStream fis = new FileInputStream(archivoAbrir);//se lee archivo
+                ObjectInputStream ois = new ObjectInputStream(fis);//se lee objeto
+                figuras = (ArrayList<Figura>) ois.readObject();//se pasan los objetos al arraylist
                 fis.close();
                 ois.close();
-                //dibujoGuardado = false;
                 menuItemNuevo.setEnabled(true);
                 regresar = true;
-                repaint();
+                repaint();//este repaint, no es necesario llamar al metodo para poner guardado como falso
+                dibujoGuardado=true;//tecnicamente, al ser un archivo que se esta abriendo, ya esta guardado
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(Main.miVentanaP, "Error al intentar abrir el ARCHIVO", "Programa de Dibujo",
+            JOptionPane.showMessageDialog(Contenedor.miVentanaP, "Error al intentar abrir el archivo: \n"+ ex, "Programa de Dibujo",
                     2);
         }
         return regresar;
     }
     private String NombreDelArchivo(String nombre, String extension) {
         String s = "";
-        if (nombre.lastIndexOf(extension) == nombre.length() - 4)
+        //si el nombre es igual al nombre sin extension, se regresara ese nombre
+        if (nombre.lastIndexOf(extension) == nombre.length() - 5) {
             s = nombre;
-        else
-            s = new StringBuilder(String.valueOf(nombre)).append(extension).toString();
-        ;
+            //si no, le quita los ultimos 5 digitos de la extension
+        } else {
+            s = new StringBuilder (nombre).append(extension).toString();
+        }
         return s;
     }
     private boolean guardarDibujo() {
         boolean regresar = false;
-        File directorioActual = new File(".");
+        File directorioActual = new File(rutaSeleccionada);//directorio donde abrira la ventana
         try {
-            JFileChooser archivo = new JFileChooser(directorioActual.getCanonicalPath());
-            FileNameExtensionFilter filtro = new FileNameExtensionFilter("Mi Dibujo", new String[] { "dbj" });
-            archivo.setFileFilter(filtro);
-            if (archivo.showSaveDialog(Main.miVentanaP) == 0) {
-                File archivoGuardar = new File(NombreDelArchivo(archivo.getSelectedFile().getName(), ".dbj"));
-                FileOutputStream fos = new FileOutputStream(archivoGuardar);
+            //aqui entrara por defecto en la carpeta del proyecto por rutaSeleccionada="."
+            if (rutaSeleccionada=="."){
+                archivoVentana = new JFileChooser(directorioActual.getCanonicalPath());
+            } else {
+                //se crea filechooser, en este camino se pondra la ruta en la que se quedo la rutaseleccionada
+                archivoVentana = new JFileChooser(directorioActual);
+            }
+
+
+            //se crea extension y se añade filtro
+            FileNameExtensionFilter filtro = new FileNameExtensionFilter("Archivo dibujo - Vega Gonzalez","dbjx");
+            archivoVentana.setFileFilter(filtro);
+            if (archivoVentana.showSaveDialog(Contenedor.miVentanaP) == 0) {
+                // Obtener la ruta seleccionada
+                rutaSeleccionada = archivoVentana.getSelectedFile().getAbsolutePath();
+
+                // Añadir la extensión si no la tiene
+                if (!rutaSeleccionada.toLowerCase().endsWith(".dbjx")) {
+                    rutaSeleccionada += ".dbjx";
+                }
+
+                // Crear el nuevo File con la ruta seleccionada y el nombre del archivo
+                File nuevoArchivo = new File(rutaSeleccionada);
+
+                //se guarda archivo, utilizando el arraylist donde se guardaron las figuras
+                FileOutputStream fos = new FileOutputStream(nuevoArchivo);
                 ObjectOutputStream oos = new ObjectOutputStream(fos);
                 oos.writeObject(figuras);
                 fos.close();
                 oos.close();
-                JOptionPane.showMessageDialog(Main.miVentanaP, "Archivo guardado correctamente", "Programa de Dibujo",
+                JOptionPane.showMessageDialog(Contenedor.miVentanaP,  nuevoArchivo.getName()+ " guardado correctamente", "Programa de Dibujo",
                         -1);
-                //dibujoGuardado = true;
                 regresar = true;
             }
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(Main.miVentanaP, "Error al guardar el ARCHIVO", "Programa de Dibujo", 2);
+            JOptionPane.showMessageDialog(Contenedor.miVentanaP, "Error al guardar el archivo: " + ex, "Programa de Dibujo", 2);
         }
+        dibujoGuardado = true;//el archivo se guardo
         return regresar;
     }
     private class ManejadorAyuda implements ActionListener {
@@ -484,3 +534,6 @@ class MiPanelP extends JPanel{
         }
     }
 }
+
+
+
