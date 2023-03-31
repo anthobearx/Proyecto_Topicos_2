@@ -13,9 +13,10 @@ import java.awt.print.PrinterJob;
 import java.io.*;
 import java.util.ArrayList;
 
+import static com.sun.java.accessibility.util.AWTEventMonitor.addWindowListener;
 
 
-class MiPanelP extends JPanel{
+class MiPanelP extends JPanel {
 
     /**Antes tipo Vector, ahora ArrayList.
     Util para guardar los tipos figuras aquí*/
@@ -56,7 +57,7 @@ class MiPanelP extends JPanel{
     Figura figuraCompleta;//en esta figura se creara la figura con shape, color y relleno
 
     /*Regresar*/
-    ImageIcon regresarImagen = new ImageIcon("src\\imagenes\\flecha.png");
+    //ImageIcon regresarImagen = new ImageIcon("src\\imagenes\\flecha.png");
     JLabel imagenLabel;
 
     /*Ruta seleccionada*/
@@ -164,7 +165,7 @@ class MiPanelP extends JPanel{
         menuAyuda.add(menuItemAcercaDe);
 
         //Menu Regresar
-        imagenLabel = new JLabel(regresarImagen);
+        imagenLabel = new JLabel("<--");
         /*Aqui se hace que el Jlabel tenga un Listener, sin la necesidad de crear el Listener (Oyente) como metodo,
         * y lo añade ahi mismo*/
         imagenLabel.addMouseListener(new MouseAdapter() {
@@ -220,6 +221,7 @@ class MiPanelP extends JPanel{
     public void regresarMetodo(){
         if(figuras.size()>0){
             figuras.remove(figuras.size() - 1);
+            dibujoGuardado=false;//al hacer un movimiento el dibujo se pondra como guardado:falso
             repaintMetodo();
         }else{
             JOptionPane.showMessageDialog(MiPanelP.this,
@@ -280,6 +282,7 @@ class MiPanelP extends JPanel{
             MiPanelP.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             // Obtener el punto final
             p2 = e.getPoint();//se obtiene el segundo punto
+            dibujoGuardado=false;//al hacer un movimiento el dibujo se pondra como guardado:falso
             forma = crearFigura();//se guarda solo el shape en forma
             figuraCompleta = new Figura(forma, color, relleno);//aquí se crea la figura con sus 3 atributos (shape, color y relleno)
             figuras.add(figuraCompleta);//aqui se agrega a la lista de vectores la figura completa
@@ -367,18 +370,20 @@ class MiPanelP extends JPanel{
         public void actionPerformed(ActionEvent e) {
             JMenuItem click = (JMenuItem) e.getSource();
             if(click==menuItemNuevo){
+                cambiosSinGuardar(false);//antes de abrir algo nuevo, preguntara si hay cambios y si quiere guardarlos
                 //figuras = new ArrayList<>(); //por terminos de eficiencia, se utiliza removeAll
                 figuras.removeAll(figuras);
                 repaintMetodo();
 
             }else if(click==menuItemAbrir){
+                cambiosSinGuardar(false);//antes de abrir algo mas, preguntara si hay cambios y si quiere guardarlos
                 abrirDibujo();
             }else if(click==menuItemGuardar){
                 guardarDibujo();
             }else if(click==menuItemImprimir){
                 print();
             }else if (click==menuItemSalir){
-                System.exit(0);
+                cambiosSinGuardar(true);
             }
         }
     }
@@ -421,7 +426,6 @@ class MiPanelP extends JPanel{
             figura.dibujarFigura(g2);
         }
     }
-
     private boolean abrirDibujo() {
         boolean regresar = false;
         File directorioActual = new File(rutaSeleccionada);//directorio donde abrira la ventana
@@ -433,10 +437,6 @@ class MiPanelP extends JPanel{
                 //se crea filechooser, en este camino se pondra la ruta en la que se quedo la rutaseleccionada
                 archivoVentana = new JFileChooser(directorioActual);
             }
-
-
-
-
             //se crea un filtro para solo utilizar la extension de ahi
             FileNameExtensionFilter filtro = new FileNameExtensionFilter("Archivo dibujo - Vega Gonzalez", "dbjx");
             archivoVentana.setFileFilter(filtro);
@@ -460,17 +460,6 @@ class MiPanelP extends JPanel{
                     2);
         }
         return regresar;
-    }
-    private String NombreDelArchivo(String nombre, String extension) {
-        String s = "";
-        //si el nombre es igual al nombre sin extension, se regresara ese nombre
-        if (nombre.lastIndexOf(extension) == nombre.length() - 5) {
-            s = nombre;
-            //si no, le quita los ultimos 5 digitos de la extension
-        } else {
-            s = new StringBuilder (nombre).append(extension).toString();
-        }
-        return s;
     }
     private boolean guardarDibujo() {
         boolean regresar = false;
@@ -515,6 +504,26 @@ class MiPanelP extends JPanel{
         }
         dibujoGuardado = true;//el archivo se guardo
         return regresar;
+    }
+    /**Este metodo recibe el parametro boolean de cerrar, si este es true, cerrada despues de guardarse si fue necesario*/
+    public void cambiosSinGuardar(boolean cerrar){
+        //si el dibujo no esta guardado y hay al menos una figura, pregunta si quiere guardar
+        if (dibujoGuardado==false && figuras.size()>0){
+            int respuesta = JOptionPane.showConfirmDialog(Contenedor.miVentanaP,"Hay cambios sin guardar, ¿Deseas guardar el archivo","Guardar antes...",0);
+            if(respuesta==JOptionPane.YES_OPTION){
+                guardarDibujo();//opcion de guardar
+                //puede que despues de todo no se guarde(que cierre la ventana antes de guardar)
+                if (dibujoGuardado==true && cerrar==true){
+                    System.exit(0);//se saldra unicamente si se guardo el archivo
+                }
+                //si se le da que no, se sale sin guardar
+            } else if (respuesta==JOptionPane.NO_OPTION && cerrar==true) {
+                System.exit(0);
+            }
+            //si no se cumple ninguna condicion, simplemente, salir
+        }else if (cerrar==true){
+            System.exit(0);
+        }
     }
     private class ManejadorAyuda implements ActionListener {
 
